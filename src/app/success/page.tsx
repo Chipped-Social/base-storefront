@@ -26,42 +26,24 @@ export default function SuccessPage() {
   useEffect(() => {
     async function setupProvider() {
       try {
-        // First try to use the provider from an active connection
-        if (account.status === 'connected' && account.connector) {
-          console.log('Using connected account provider');
-          const connectedProvider = await account.connector.getProvider();
-          setProvider(connectedProvider);
-          return;
-        }
-        
-        // Next try to use window.ethereum if available
-        if (typeof window !== 'undefined' && window.ethereum) {
-          console.log('Using window.ethereum provider');
-          setProvider(window.ethereum);
-          return;
-        }
-        
-        // Finally, try to get a provider through Coinbase Wallet connector
         const coinbaseConnector = connectors.find(c => c.name === 'Coinbase Wallet');
-        if (coinbaseConnector) {
-          try {
-            console.log('Attempting to get provider from Coinbase Wallet connector');
-            const coinbaseProvider = await coinbaseConnector.getProvider();
-            setProvider(coinbaseProvider);
-            return;
-          } catch (error) {
-            console.error('Failed to get provider from Coinbase Wallet connector:', error);
-          }
+
+        if (!coinbaseConnector) {
+          console.warn("Coinbase Wallet connector not found");
+          return;
         }
-        
-        console.warn('No provider available for transaction status checks');
+
+        // Always use SDK-based provider — this ensures popup launches if extension is not installed
+        console.log("Triggering Coinbase Smart Wallet provider via connector");
+        const smartWalletProvider = await coinbaseConnector.getProvider();
+        setProvider(smartWalletProvider);
       } catch (error) {
-        console.error("Failed to setup provider:", error);
+        console.error("Failed to setup Coinbase Smart Wallet provider:", error);
       }
     }
-    
+
     setupProvider();
-  }, [account, connectors]);
+  }, [connectors]);
   
   // For development/testing purposes only: The wallet_getCallsReceipt method is not supported
   // We're keeping this code to show the approach, but we'll handle the error gracefully
@@ -72,9 +54,7 @@ export default function SuccessPage() {
     
     async function checkReceipt() {
       try {
-        // Call wallet_getCallsReceipt to get the current status
-        // Note: This method is not currently supported in most providers
-        // and will likely fail with error code -32603
+        // Call wallet_getCallsStatus to get the current status
         const receipt = await provider.request({
           method: "wallet_getCallsStatus",
           params: [callsId]
