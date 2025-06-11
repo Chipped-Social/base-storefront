@@ -127,11 +127,11 @@ export default function Home() {
                   functionName: "transfer",
                   args: [
                     "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
-                    parseUnits("0.01", 6),
+                    parseUnits("1.00", 6),
                   ],
                 }),
               },
-            ], // Simple transfer of 0.01 USDC to the contract
+            ],
           capabilities: {
             dataCallback: {
               requests: requests,

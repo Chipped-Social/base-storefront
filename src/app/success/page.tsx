@@ -100,7 +100,6 @@ export default function SuccessPage() {
             src="/assets/base_logo.svg" 
             alt="Base Logo"
             className="base-logo"
-            style={{ height: '103px', width: 'auto' }}
           />
         </div>
         <div className="header-right">
