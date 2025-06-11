@@ -1,0 +1,11 @@
+# Environment Variables for Base Storefront
+
+# API URL for data validation callback
+# Set this to your backend API URL (where the data-validation endpoint is hosted)
+NEXT_PUBLIC_API_URL=https://dev-api.chippedsocial.com
+
+# For production deployment:
+# NEXT_PUBLIC_API_URL=https://api.chippedsocial.com
+
+# For local development with ngrok:
+# NEXT_PUBLIC_API_URL=https://your-ngrok-url.ngrok-free.app
