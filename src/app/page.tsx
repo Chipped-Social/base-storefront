@@ -77,9 +77,7 @@ export default function Home() {
         setIsLoading(false);
         return;
       }
-
-      // Following the Base engineer's suggestion: wallet_sendCalls doesn't require a connection
-      // This means we can call it directly through the Coinbase Wallet's injected provider
+      
       let coinbaseProvider;
       
       // Try to use an existing provider if available
@@ -113,7 +111,6 @@ export default function Home() {
       }
       
       // Make the direct wallet_sendCalls request
-      // This is the key insight from the Base engineer - we can call this directly
       const response = await coinbaseProvider.request({
         method: "wallet_sendCalls",
         params: [{
@@ -170,7 +167,7 @@ export default function Home() {
           return;
         }
         
-        // If no hash, stay on current page and show success message
+        // If no callsId, stay on current page and show success message
         setResult(resultData);
       } else {
         setResult({ success: false, error: "Invalid response" } as ResultData);
@@ -182,9 +179,6 @@ export default function Home() {
     }
   }
 
-  /* Original return block removed */
-
-  // New redesigned UI based on Figma mockup
   return (
     <div className="container">
       {/* Header */}

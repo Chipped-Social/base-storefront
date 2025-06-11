@@ -22,7 +22,7 @@ export default function SuccessPage() {
     }
   }, [searchParams]);
   
-  // Get the provider for making RPC calls (but don't attempt to use it for wallet_getCallsReceipt)
+  // Get the provider for making RPC calls
   useEffect(() => {
     async function setupProvider() {
       try {
@@ -45,8 +45,6 @@ export default function SuccessPage() {
     setupProvider();
   }, [connectors]);
   
-  // For development/testing purposes only: The wallet_getCallsReceipt method is not supported
-  // We're keeping this code to show the approach, but we'll handle the error gracefully
   useEffect(() => {
     if (!callsId || !provider) return;
     
