@@ -165,6 +165,7 @@ export default function Home() {
         // After successful transaction submission, navigate to the success page
         // with the callsId, which is a unique identifier for this batch of calls
         if (response.callsId) {
+          console.log(response)
           window.location.href = `/success?callsId=${response.callsId}`;
           return;
         }

@@ -67,8 +67,8 @@ const SizeGuideModal: React.FC<SizeGuideModalProps> = ({ isOpen, onClose }) => {
         </div>
         
         <div className="size-info">
-          If you&apos;re between sizes, we recommend choosing<br />
-          the larger size and filing down to fit
+          If you're between sizes, we recommend choosing
+          the larger size and filing down to fit.
         </div>
         
         <div className="measurement-methods">

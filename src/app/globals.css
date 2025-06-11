@@ -627,7 +627,7 @@ a {
   }
 
   .method {
-    flex-direction: row;
+    flex-direction: column;
     gap: 16px;
     line-height: 1;
   }
