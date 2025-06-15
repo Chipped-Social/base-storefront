@@ -8,17 +8,30 @@ import { useAccount, useConnect } from 'wagmi';
 export default function SuccessPage() {
   const searchParams = useSearchParams();
   const [callsId, setCallsId] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string>('M'); // Default size
   const [receiptData, setReceiptData] = useState<any>(null);
   const [receiptError, setReceiptError] = useState<string | null>(null);
   const [provider, setProvider] = useState<any>(null);
   const { connectors, connect } = useConnect();
   const account = useAccount();
   
-  // Get the callsId from URL query parameters
+  // Get the callsId, orderId, and size from URL query parameters
   useEffect(() => {
     const id = searchParams.get('callsId');
+    const order = searchParams.get('orderId');
+    const size = searchParams.get('size');
+    
     if (id) {
       setCallsId(id);
+    }
+    
+    if (order) {
+      setOrderId(order);
+    }
+    
+    if (size) {
+      setSelectedSize(size);
     }
   }, [searchParams]);
   
@@ -44,11 +57,22 @@ export default function SuccessPage() {
 
     setupProvider();
   }, [connectors]);
-  
+
+  // For debugging, show component render
+  useEffect(() => {
+    console.log("Success page rendered/updated with state:", {
+      callsId,
+      orderId,
+      selectedSize,
+      receiptStatus: receiptData?.status || 'none'
+    });
+  });
+
   useEffect(() => {
     if (!callsId || !provider) return;
     
     let mounted = true;
+    let intervalId: NodeJS.Timeout | null = null;
     
     async function checkReceipt() {
       try {
@@ -61,6 +85,20 @@ export default function SuccessPage() {
         if (mounted) {
           console.log("Receipt data:", receipt);
           setReceiptData(receipt);
+          
+          // If status is no longer pending, stop polling
+          // Force a state update with a new reference to ensure React re-renders
+          if (receipt) {
+            setReceiptData({...receipt});
+          }
+          
+          if (receipt && receipt.status && receipt.status !== 'PENDING') {
+            console.log('Transaction no longer pending, stopping polling');
+            if (intervalId) {
+              clearInterval(intervalId);
+              intervalId = null;
+            }
+          }
         }
       } catch (error: any) {
         console.error("Error fetching receipt:", error);
@@ -71,14 +109,27 @@ export default function SuccessPage() {
         } else {
           setReceiptError("Could not retrieve transaction status");
         }
+        
+        // Stop polling on error to avoid repeated error messages
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
       }
     }
     
-    // Only try once to avoid repeated error messages
+    // Initial check
     checkReceipt();
     
+    // Start polling every 5 seconds
+    intervalId = setInterval(checkReceipt, 5000);
+    
+    // Cleanup function to clear interval when component unmounts
     return () => {
       mounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
   }, [callsId, provider]);
 
@@ -87,11 +138,13 @@ export default function SuccessPage() {
       {/* Header */}
       <header className="header">
         <div className="header-left">
-          <img 
-            src="/assets/chipped_logo.svg" 
-            alt="Chipped Logo"
-            className="chipped-logo"
-          />
+          <Link href="/">
+            <img 
+              src="/assets/chipped_logo.svg" 
+              alt="Chipped Logo"
+              className="chipped-logo"
+            />
+          </Link>
         </div>
         <div className="header-center">
           <img 
@@ -110,7 +163,12 @@ export default function SuccessPage() {
         <h1 className="success-title">Thank you for your order!</h1>
         
         <p className="success-message">
-          Your payment has been processed successfully. Nails will ship in July, if you have any questions please reach out to us on X.
+          {receiptData && (receiptData.status === 'confirmed' || receiptData.status === 'CONFIRMED' || 
+           receiptData.status === 'success' || receiptData.status === 'SUCCESS') ? (
+            "Your payment has been processed successfully. Nails will ship in July, if you have any questions please reach out to us on X."
+          ) : (
+            "Your order is being processed. Please wait while we confirm your payment."
+          )}
         </p>
         
         <a 
@@ -119,44 +177,45 @@ export default function SuccessPage() {
           rel="noopener noreferrer"
           className="x-link"
         >
-          <div className="x-logo"></div>
+          <img 
+            src="/assets/x_icon.svg" 
+            alt="X Logo" 
+            className="x-logo" 
+            width="40" 
+            height="40"
+          />
         </a>
 
-        {callsId && (
-          <div className="transaction-info">
-            <p>Transaction Reference ID:</p>
-            <div className="transaction-id">
-              {callsId.substring(0, 8)}...{callsId.substring(callsId.length - 8)}
-            </div>
-            
-            {receiptData && (
-              <div className="receipt-data">
-                <p>Status: {receiptData.status}</p>
-                {receiptData.receipts && receiptData.receipts.length > 0 && (
-                  <div>
-                    <p>Transaction Hash: </p>
-                    <a 
-                      href={`https://sepolia.basescan.org/tx/${receiptData.receipts[0].transactionHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="transaction-link"
-                    >
-                      {receiptData.receipts[0].transactionHash.substring(0, 8)}...
-                      {receiptData.receipts[0].transactionHash.substring(receiptData.receipts[0].transactionHash.length - 8)}
-                    </a>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {receiptError && (
-              <div className="receipt-info">
-                <p>Your transaction has been submitted to the blockchain.</p>
-                <p>Order confirmation number: {callsId.substring(0, 16)}</p>
-              </div>
+        <div className="transaction-info">
+          <div className="receipt-data">
+            {callsId ? (
+              receiptData ? (
+                <>
+                  <p>Status: {receiptData.status} {(receiptData.status === 'confirmed' || receiptData.status === 'CONFIRMED' || 
+                                                   receiptData.status === 'success' || receiptData.status === 'SUCCESS') ? '✅' : '⏱️'}</p>
+                  {receiptData.receipts && receiptData.receipts.length > 0 && (
+                    <div>
+                      <p>Transaction Hash: </p>
+                      <a 
+                        href={`https://sepolia.basescan.org/tx/${receiptData.receipts[0].transactionHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transaction-link"
+                      >
+                        {receiptData.receipts[0].transactionHash.substring(0, 8)}...
+                        {receiptData.receipts[0].transactionHash.substring(receiptData.receipts[0].transactionHash.length - 8)}
+                      </a>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p>Loading transaction data...</p>
+              )
+            ) : (
+              <p>Transaction complete</p>
             )}
           </div>
-        )}
+        </div>
         
         <div className="return-home-container">
           <Link href="/" className="return-home-button">

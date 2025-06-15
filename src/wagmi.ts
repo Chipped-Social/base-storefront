@@ -3,7 +3,7 @@ import { baseSepolia } from "wagmi/chains";
 import { coinbaseWallet, injected, walletConnect } from "wagmi/connectors";
 
 const cbWalletConnector = coinbaseWallet({
-  appName: "Base Storefront",
+  appName: "Chipped Social",
   preference: {
     keysUrl: "https://keys-dev.coinbase.com/connect",
     options: "smartWalletOnly",

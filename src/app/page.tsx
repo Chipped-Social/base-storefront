@@ -7,6 +7,7 @@ import { encodeFunctionData, erc20Abi, numberToHex, parseUnits } from "viem";
 import { baseSepolia } from "wagmi/chains";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { ProviderInterface } from "@coinbase/wallet-sdk";
+import { v4 as uuidv4 } from 'uuid';
 
 // Define types for our state
 interface DataRequest {
@@ -19,6 +20,21 @@ interface ResultData {
   error?: string;
   email?: string;
   address?: string;
+}
+
+// Helper function for generating a Uint88 ID
+function generateRandomUint88() {
+  // Generate 11 random bytes (88 bits)
+  const bytes = new Uint8Array(11);
+  crypto.getRandomValues(bytes);
+  
+  // Convert to BigInt
+  let result = BigInt(0);
+  for (let i = 0; i < bytes.length; i++) {
+    result = (result << BigInt(8)) | BigInt(bytes[i]);
+  }
+  
+  return result;
 }
 
 export default function Home() {
@@ -51,14 +67,15 @@ export default function Home() {
     getProvider();
   }, [account]);
 
-  // Function to get callback URL from environment variables
-  function getCallbackURL() {
+  // Helper function to get callback URL with order ID and size
+  function getCallbackURLwithOrderId(orderId: any, selectedSize: string) {
     // Use environment variables for all environments
-    if (process.env.NEXT_PUBLIC_API_URL) {
-      return `${process.env.NEXT_PUBLIC_API_URL}/api/data-validation`;
-    }
-    // Fallback for local development if env var not set
-    return "https://lovely-singular-heron.ngrok-free.app/api/data-validation";
+    let baseUrl = process.env.NEXT_PUBLIC_API_URL 
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api/data-validation`
+      : "https://lovely-singular-heron.ngrok-free.app/api/data-validation";
+      
+    // Return the callback URL
+    return `${baseUrl}/${orderId}?size=${selectedSize}`;
   }
 
   // Handle form submission
@@ -71,6 +88,9 @@ export default function Home() {
       const requests = [];
       if (dataToRequest.email) requests.push({ type: "email", optional: false });
       if (dataToRequest.address) requests.push({ type: "physicalAddress", optional: false });
+      
+      // Generate a unique order ID
+      const orderId = generateRandomUint88();
 
       if (requests.length === 0) {
         setResult({ success: false, error: "Select at least one data type" } as ResultData);
@@ -109,30 +129,43 @@ export default function Home() {
           return;
         }
       }
-      
-      // Make the direct wallet_sendCalls request
+
+      // Make the direct wallet_sendCalls request with our generated orderId
       const response = await coinbaseProvider.request({
         method: "wallet_sendCalls",
         params: [{
           version: "1.0",
           chainId: numberToHex(84532), // Base Sepolia
+          atomicRequired: true,
           calls: [
               {
                 to: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC contract address on Base Sepolia
                 data: encodeFunctionData({
                   abi: erc20Abi,
-                  functionName: "transfer",
+                  functionName: "approve",
                   args: [
-                    "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
-                    parseUnits("1.00", 6),
+                    "0x00000000f2394Ebb30723AbE00A0af63F8917493",
+                    parseUnits("0.01", 6),
                   ],
                 }),
               },
+              {
+                to: "0x00000000f2394Ebb30723AbE00A0af63F8917493", // Orders contract address on Base Sepolia
+                data: encodeFunctionData({
+                  abi: [{"inputs":[{"internalType":"uint8","name":"_productId","type":"uint8"},{"internalType":"address","name":"_token","type":"address"},{"internalType":"uint88","name":"_orderId","type":"uint88"}],"name":"buy","outputs":[],"stateMutability":"payable","type":"function"}],
+                  functionName: "buy",
+                  args: [
+                    0,
+                    "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                    orderId
+                  ]
+                })
+              }
             ],
           capabilities: {
             dataCallback: {
               requests: requests,
-              callbackURL: getCallbackURL(),
+              callbackURL: getCallbackURLwithOrderId(orderId, selectedSize),
             },
           },
         }],
@@ -148,7 +181,7 @@ export default function Home() {
 
         // Extract address if provided
         if (data.physicalAddress) {
-          const addr = data.physicalAddress.physicalAddress;
+          const addr = data.physicalAddress;
           resultData.address = [
             addr.address1,
             addr.address2,
@@ -159,13 +192,12 @@ export default function Home() {
           ].filter(Boolean).join(", ");
         }
         
-        // After successful transaction submission, navigate to the success page
-        // with the callsId, which is a unique identifier for this batch of calls
-        if (response.callsId) {
-          console.log(response)
-          window.location.href = `/success?callsId=${response.callsId}`;
-          return;
-        }
+      // After successful transaction submission, navigate to the success page
+      // with both the callsId and the sessionId we stored earlier
+      if (response.callsId) {
+        window.location.href = `/success?callsId=${response.callsId}&orderId=${orderId}&size=${selectedSize}`;
+        return;
+      }
         
         // If no callsId, stay on current page and show success message
         setResult(resultData);

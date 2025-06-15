@@ -10,9 +10,13 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.45.1",
+    "@types/pg": "^8.15.4",
+    "@types/uuid": "^10.0.0",
     "next": "14.2.4",
+    "pg": "^8.16.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "uuid": "^11.1.0",
     "viem": "latest",
     "wagmi": "latest"
   },

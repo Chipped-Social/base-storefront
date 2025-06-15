@@ -35,3 +35,6 @@ coverage
 
 # Misc
 .vercel
+
+# Ignore the SSL certificate
+certs/ca-certificate.crt
