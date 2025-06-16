@@ -132,9 +132,6 @@ export async function storeOrderData(
   }
 }
 
-// Other database functions are removed as part of the refactoring
-// If needed, they can be reimplemented later
-
 // Initialize the database on import
 initDatabase().catch(console.error);
 

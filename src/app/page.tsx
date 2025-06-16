@@ -72,7 +72,7 @@ export default function Home() {
     // Use environment variables for all environments
     let baseUrl = process.env.NEXT_PUBLIC_API_URL 
       ? `${process.env.NEXT_PUBLIC_API_URL}/api/data-validation`
-      : "https://lovely-singular-heron.ngrok-free.app/api/data-validation";
+      : "https://dev-base.chippedsocial.com";
       
     // Return the callback URL
     return `${baseUrl}/${orderId}?size=${selectedSize}`;
@@ -130,33 +130,39 @@ export default function Home() {
         }
       }
 
+      // Fetch configuration options from environment
+      const CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID ? parseInt(process.env.NEXT_PUBLIC_CHAIN_ID) : 84532; // Default to Base Sepolia
+      const USDC_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS as `0x${string}` || "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as `0x${string}`; // Default to Base Sepolia
+      const ORDERS_SMART_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_ORDERS_SMART_CONTRACT_ADDRESS as `0x${string}` || "0x00000000f2394Ebb30723AbE00A0af63F8917493" as `0x${string}`; // Default to Base Sepolia
+
+
       // Make the direct wallet_sendCalls request with our generated orderId
       const response = await coinbaseProvider.request({
         method: "wallet_sendCalls",
         params: [{
           version: "1.0",
-          chainId: numberToHex(84532), // Base Sepolia
+          chainId: numberToHex(CHAIN_ID), // Base Sepolia
           atomicRequired: true,
           calls: [
               {
-                to: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC contract address on Base Sepolia
+                to: USDC_CONTRACT_ADDRESS, // USDC contract address on Base Sepolia
                 data: encodeFunctionData({
                   abi: erc20Abi,
                   functionName: "approve",
                   args: [
-                    "0x00000000f2394Ebb30723AbE00A0af63F8917493",
+                    ORDERS_SMART_CONTRACT_ADDRESS,
                     parseUnits("0.01", 6),
                   ],
                 }),
               },
               {
-                to: "0x00000000f2394Ebb30723AbE00A0af63F8917493", // Orders contract address on Base Sepolia
+                to: ORDERS_SMART_CONTRACT_ADDRESS, // Orders contract address on Base Sepolia
                 data: encodeFunctionData({
                   abi: [{"inputs":[{"internalType":"uint8","name":"_productId","type":"uint8"},{"internalType":"address","name":"_token","type":"address"},{"internalType":"uint88","name":"_orderId","type":"uint88"}],"name":"buy","outputs":[],"stateMutability":"payable","type":"function"}],
                   functionName: "buy",
                   args: [
                     0,
-                    "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                    USDC_CONTRACT_ADDRESS,
                     orderId
                   ]
                 })

@@ -1,11 +1,14 @@
-# Environment Variables for Base Storefront
+# DATABASE CONFIGURATION
+DB_USER=""
+DB_PASSWORD=""
+DB_HOST=""
+DB_PORT=
+DB_DATABASE=""
 
-# API URL for data validation callback
-# Set this to your backend API URL (where the data-validation endpoint is hosted)
-NEXT_PUBLIC_API_URL=https://dev-api.chippedsocial.com
+# API URL
+NEXT_PUBLIC_API_URL=""
 
-# For production deployment:
-# NEXT_PUBLIC_API_URL=https://api.chippedsocial.com
-
-# For local development with ngrok:
-# NEXT_PUBLIC_API_URL=https://your-ngrok-url.ngrok-free.app
+# CHAIN CONFIGURATION
+NEXT_PUBLIC_CHAIN_ID=84532
+NEXT_PUBLIC_USDC_CONTRACT_ADDRESS="0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+NEXT_PUBLIC_ORDERS_SMART_CONTRACT_ADDRESS="0x00000000f2394Ebb30723AbE00A0af63F8917493"
