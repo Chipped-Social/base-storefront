@@ -5,6 +5,8 @@ export async function POST(
   request: Request,
   { params }: { params: { orderId: string } }
 ) {
+  console.log('--- Incoming POST ---', request.method, request.url);
+
   // Extract the order ID from route parameters
   const orderId = params.orderId;
   
