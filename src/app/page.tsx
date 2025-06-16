@@ -251,7 +251,7 @@ export default function Home() {
         <section className="product-section">
           <div className="product-image-container">
             <img 
-              src="/assets/product_image.png"
+              src="/assets/product_image.jpg"
               alt="Product"
               className="product-image"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
