@@ -151,7 +151,7 @@ export default function Home() {
                   functionName: "approve",
                   args: [
                     ORDERS_SMART_CONTRACT_ADDRESS,
-                    parseUnits("0.01", 6),
+                    parseUnits("45.00", 6),
                   ],
                 }),
               },

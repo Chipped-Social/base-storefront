@@ -197,7 +197,7 @@ export default function SuccessPage() {
                     <div>
                       <p>Transaction Hash: </p>
                       <a 
-                        href={`https://sepolia.basescan.org/tx/${receiptData.receipts[0].transactionHash}`}
+                        href={`https://basescan.org/tx/${receiptData.receipts[0].transactionHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="transaction-link"
